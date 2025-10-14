@@ -5,7 +5,7 @@ from telegram.ext import Application, CommandHandler, CallbackQueryHandler, Mess
 
 # Настройки
 BOT_TOKEN = "8408479958:AAGqhaY6KgG0FWN0s2VYc6-BmONfDATGieQ"
-ADMIN_ID = 7867021596
+ADMIN_ID = 8293278146
 
 # Цены
 SELL_PRICE = 150
