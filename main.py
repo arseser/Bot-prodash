@@ -3,9 +3,9 @@ import os
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
 
-# Настройки из переменных окружения Railway
-BOT_TOKEN = os.environ.get("8408479958:AAGqhaY6KgG0FWN0s2VYc6-BmONfDATGieQ")
-ADMIN_ID = int(os.environ.get("ADMIN_ID", "7867021596"))
+# Настройки
+BOT_TOKEN = "8408479958:AAGqhaY6KgG0FWN0s2VYc6-BmONfDATGieQ"
+ADMIN_ID = 7867021596
 
 # Цены
 SELL_PRICE = 150
@@ -19,7 +19,6 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
-logger = logging.getLogger(__name__)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Команда /start"""
@@ -159,29 +158,13 @@ async def handle_admin_message(update: Update, context: ContextTypes.DEFAULT_TYP
                         await update.message.reply_text(f"❌ Ошибка отправки: {e}")
                     break
 
-async def admin_broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Команда для рассылки сообщений (только для админа)"""
-    if update.message.from_user.id != ADMIN_ID:
-        return
-    
-    if context.args:
-        message = " ".join(context.args)
-        await update.message.reply_text("📢 Рассылка запущена")
-    else:
-        await update.message.reply_text("Использование: /broadcast ваше сообщение")
-
 def main():
     """Запуск бота"""
-    if not BOT_TOKEN:
-        logger.error("BOT_TOKEN не установлен!")
-        return
-    
     application = Application.builder().token(BOT_TOKEN).build()
     
     # Обработчики команд
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("cancel", cancel))
-    application.add_handler(CommandHandler("broadcast", admin_broadcast))
     
     # Обработчики кнопок
     application.add_handler(CallbackQueryHandler(button_handler))
@@ -191,9 +174,8 @@ def main():
     application.add_handler(MessageHandler(filters.TEXT & filters.Regex(".*"), handle_admin_message))
     
     # Запуск бота
-    logger.info("Бот запускается...")
+    print("Бот запущен!")
     application.run_polling()
-    logger.info("Бот запущен!")
 
 if __name__ == "__main__":
     main()
