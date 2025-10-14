@@ -58,7 +58,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                  f"Пользователь: {user_name}\n"
                  f"ID: {user_id}\n"
                  f"Сумма: {SELL_PRICE}₽\n\n"
-                 f"Ответьте этому боту, чтобы начать общение с покупателем."
+                 f"Ответьте на ЭТО сообщение, чтобы начать общение с покупателем."
         )
         
     elif query.data == "sell_pack":
@@ -76,7 +76,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                  f"Пользователь: {user_name}\n"
                  f"ID: {user_id}\n"
                  f"Предлагаемая цена: {BUY_PRICE}₽\n\n"
-                 f"Ответьте этому боту, чтобы начать общение с продавцом."
+                 f"Ответьте на ЭТО сообщение, чтобы начать общение с продавцом."
         )
         
     elif query.data == "prices":
@@ -121,33 +121,23 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("У вас нет активных чатов.")
 
-async def handle_user_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обработка сообщений от пользователя в активном чате"""
-    user_id = update.message.from_user.id
-    
-    if user_id in active_chats:
-        await context.bot.send_message(
-            chat_id=ADMIN_ID,
-            text=f"👤 Сообщение от пользователя {user_id}:\n\n{update.message.text}"
-        )
-        await update.message.reply_text("✅ Сообщение отправлено администратору")
-    else:
-        await update.message.reply_text("Используйте кнопки для начала общения с администратором.")
-
 async def handle_admin_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обработка сообщений от администратора"""
     if update.message.from_user.id != ADMIN_ID:
         return
     
+    # Проверяем, является ли сообщение ответом (reply)
     if update.message.reply_to_message:
         original_text = update.message.reply_to_message.text
         
+        # Ищем ID пользователя в тексте сообщения
         if "ID:" in original_text:
             lines = original_text.split('\n')
             for line in lines:
                 if line.startswith("ID:"):
                     user_id = int(line.split(":")[1].strip())
                     
+                    # Отправляем сообщение пользователю
                     try:
                         await context.bot.send_message(
                             chat_id=user_id,
@@ -156,11 +146,34 @@ async def handle_admin_message(update: Update, context: ContextTypes.DEFAULT_TYP
                         await update.message.reply_text("✅ Сообщение отправлено пользователю")
                     except Exception as e:
                         await update.message.reply_text(f"❌ Ошибка отправки: {e}")
-                    break
+                    return  # Важно: выходим после обработки
+    
+    # Если это не ответ на сообщение от бота, игнорируем
+    return
+
+async def handle_user_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обработка сообщений от пользователя в активном чате"""
+    user_id = update.message.from_user.id
+    
+    # Если пользователь в активном чате
+    if user_id in active_chats:
+        # Пересылаем сообщение администратору
+        await context.bot.send_message(
+            chat_id=ADMIN_ID,
+            text=f"👤 Сообщение от пользователя {user_id}:\n\n{update.message.text}"
+        )
+        await update.message.reply_text("✅ Сообщение отправлено администратору")
+    else:
+        # Если не в активном чате, предлагаем начать общение
+        await update.message.reply_text("Используйте кнопки для начала общения с администратором.")
 
 def main():
     """Запуск бота"""
     application = Application.builder().token(BOT_TOKEN).build()
+    
+    # ВАЖНО: Сначала обработчик сообщений админа, потом общий
+    application.add_handler(MessageHandler(filters.TEXT & filters.User(ADMIN_ID) & filters.REPLY, handle_admin_message))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_user_message))
     
     # Обработчики команд
     application.add_handler(CommandHandler("start", start))
@@ -168,10 +181,6 @@ def main():
     
     # Обработчики кнопок
     application.add_handler(CallbackQueryHandler(button_handler))
-    
-    # Обработчики сообщений
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_user_message))
-    application.add_handler(MessageHandler(filters.TEXT & filters.Regex(".*"), handle_admin_message))
     
     # Запуск бота
     print("Бот запущен!")
