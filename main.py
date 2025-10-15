@@ -4,7 +4,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
 
 # Настройки
-BOT_TOKEN = "8408479958:AAGqhaY6KgG0FWN0s2VYc6-BmONfDATGieQ"
+BOT_TOKEN = "AAGqhaY6KgG0FWN0s2VYc6-BmONfDATGieQ"
 ADMIN_ID = 8293278146
 
 # Цены
